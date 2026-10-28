@@ -11,16 +11,16 @@ type Site struct {
 	StatusText string
 }
 
-func checkSite(s *Site) {
+func checkSite(s *Site, ch chan<- Site) {
 	resp, err := http.Get(s.Url)
 	if err != nil {
-		s.StatusCode = 0
-		s.StatusText = "Error"
+		ch <- Site{Url: s.Url, StatusCode: 500, StatusText: err.Error()}
 		return
 	} else {
-		s.StatusCode = resp.StatusCode
 		defer resp.Body.Close()
+		s.StatusCode = resp.StatusCode
 	}
+	ch <- Site{Url: s.Url, StatusCode: s.StatusCode, StatusText: s.StatusText}
 }
 func main() {
 	urls := []string{
@@ -31,10 +31,12 @@ func main() {
 		"https://google.com",
 		"https://this-domain-does-not-exist-12345.com",
 	}
+
+	ch := make(chan Site)
 	for _, url := range urls {
-		currentSite := Site{Url: url}
-		checkSite(&currentSite)
-		fmt.Printf("Сайт: %-10s | Код: %-3d | Статус: %s\n",
-			currentSite.Url, currentSite.StatusCode, currentSite.StatusText)
+		go checkSite(&Site{Url: url}, ch)
+	}
+	for i := 0; i < len(urls); i++ {
+		fmt.Println(<-ch)
 	}
 }

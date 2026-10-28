@@ -24,6 +24,27 @@ var chatColors = []string{
 }
 
 func getRandomColor() string {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	return chatColors[rand.Intn(len(chatColors))]
 }
 
